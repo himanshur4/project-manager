@@ -2,6 +2,7 @@ import User from "../models/user.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Verification from "../models/verification.js";
+import { sendEmail } from "../libs/send-email.js";
 const registerUser=async(req,res)=>{
     try {
         const {email,name,password}=req.body;
