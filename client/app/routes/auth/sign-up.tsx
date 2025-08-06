@@ -7,6 +7,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router'
+import { useSignUpMutation } from '@/hooks/use-auth'
+import { toast } from 'sonner'
 
 
 export type SignupFormData=z.infer<typeof signUpSchema>
@@ -21,9 +23,19 @@ const SignUp = () => {
             name:"",
             confirmPassword:"",
         }
-    })
+    });
+    const {mutate,isPending}=useSignUpMutation()
     const handleOnSubmit=(values:SignupFormData)=>{
-        console.log(values)
+        mutate(values,{
+            onSuccess:()=>{
+                toast.success("Account created successfully");
+            },
+            onError:(error:any)=>{
+                const errorMessage=error.response?.data?.message||"An error occurred";
+                console.log(error)
+                toast.error(error.message)
+            }
+        })
     }
     return (
         <div className='min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4'>
@@ -43,7 +55,7 @@ const SignUp = () => {
                                     </FormControl>
                                 </FormItem>
                             )}/>
-                             <FormField control={form.control} name='email' render={({field})=>(
+                             <FormField control={form.control} name='name' render={({field})=>(
                                 <FormItem>
                                     <FormLabel>Full Name</FormLabel>
                                     <FormControl>
@@ -70,8 +82,8 @@ const SignUp = () => {
                                 </FormItem>
                             )}/>
 
-                            <Button type='submit' className='w-full'>
-                                Sign up
+                            <Button type='submit' className='w-full' disabled={isPending}>
+                               {isPending?"Signing up":"Sign up"}
                             </Button>
 
                         </form>

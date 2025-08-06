@@ -13,7 +13,7 @@ const userSchema=new mongoose.Schema({
         required:true,
         select:false
     },name:{
-        type:String, required:true,trim:trim
+        type:String, required:true,trim:true
     },
     profilePicture:{type:String},
     isEmailVerified:{type:Boolean,default:false},

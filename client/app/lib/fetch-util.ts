@@ -31,5 +31,18 @@ const postData = async<T>(path: string, data: unknown): Promise<T> => {
 };
 
 const fetchData=async <T>(path:string):Promise<T>=>{
-    
+    const response =await api.get(path);
+    return response.data;
 }
+
+const updateData=async<T>(path:string,data:unknown):Promise<T>=>{
+    const response=await api.put(path,data);
+    return response.data;
+}
+
+const deleteData=async <T>(path:string):Promise<T>=>{
+    const response=await api.delete(path);
+    return response.data;
+}
+
+export {postData,updateData,deleteData,fetchData};
