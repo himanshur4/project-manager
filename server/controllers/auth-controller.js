@@ -3,57 +3,66 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Verification from "../models/verification.js";
 import { sendEmail } from "../libs/send-email.js";
-const registerUser=async(req,res)=>{
+import aj from "../libs/arcjet.js";
+const registerUser = async (req, res) => {
     try {
-        const {email,name,password}=req.body;
-        const existingUser=await User.findOne({email});
-        if(existingUser){
-            return res.status(400).json({message:"Email already exists, try different one."})
+        const { email, name, password } = req.body;
+
+        const decision = await aj.protect(req, { email }); // Deduct 5 tokens from the bucket
+        console.log("Arcjet decision", decision.isDenied());
+
+        if (decision.isDenied()) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ message: "Invalid email address" }));
         }
-        const salt=await bcrypt.genSalt(10);
-        const hashedPassword=await bcrypt.hash(password,salt);
-        const newUser=await User.create({
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already exists, try different one." })
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser = await User.create({
             name,
             email,
-            password:hashedPassword
+            password: hashedPassword
         });
-        const verificationToken=jwt.sign(
-            {userId:newUser._id,property:"email-verification"},
+        const verificationToken = jwt.sign(
+            { userId: newUser._id, property: "email-verification" },
             process.env.JWT_SECRET,
-            {expiresIn:"1h"}
+            { expiresIn: "1h" }
         )
         await Verification.create({
-            userId:newUser.id,
-            token:verificationToken,
-            expiresAt:new Date(Date.now()+1*60*60*1000)
+            userId: newUser.id,
+            token: verificationToken,
+            expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000)
         });
 
         //send email
 
-        const verificationLink=`${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-        const emailBody=`<p>Click <a href="${verificationLink}">here</a> to verify email</p>`;
-        const emailSubject="Verify your email";
+        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+        const emailBody = `<p>Click <a href="${verificationLink}">here</a> to verify email</p>`;
+        const emailSubject = "Verify your email";
 
-        const isEmailSent=await sendEmail(email,emailSubject,emailBody)
+        const isEmailSent = await sendEmail(email, emailSubject, emailBody)
 
-        if(!isEmailSent){
+        if (!isEmailSent) {
             return res.status(500).json({
-                message:"Failed to send verification email",
+                message: "Failed to send verification email",
             })
         }
 
-        res.status(201).json({message:"Verification email sent to your email. Please check and verify your account"})
+        res.status(201).json({ message: "Verification email sent to your email. Please check and verify your account" })
     } catch (error) {
         console.log(error);
-        res.status(500).json({message:"Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
 };
-const loginUser=async(req,res)=>{
-      try {
-        
+const loginUser = async (req, res) => {
+    try {
+
     } catch (error) {
         console.log(error);
-        res.status(500).json({message:"Internal server error"});
+        res.status(500).json({ message: "Internal server error" });
     }
 };
-export {registerUser,loginUser}
+export { registerUser, loginUser }
