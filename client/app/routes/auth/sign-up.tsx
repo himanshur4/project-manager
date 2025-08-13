@@ -28,7 +28,9 @@ const SignUp = () => {
     const handleOnSubmit=(values:SignupFormData)=>{
         mutate(values,{
             onSuccess:()=>{
-                toast.success("Account created successfully");
+                toast.success("Email Verification Required",{
+                    description:"Please check your email for a verification link. If you don't see it, please check your spam folder.",
+                });
             },
             onError:(error:any)=>{
                 const errorMessage=error.response?.data?.message||"An error occurred";
